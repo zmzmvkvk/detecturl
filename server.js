@@ -14,9 +14,19 @@ const chatId = process.env.TELE_CHAT_ID;
 const chatId2 = process.env.TELE_CHAT_ID_SH;
 const token = process.env.TELE_BOT_TOKEN;
 const TelegramBot = require('node-telegram-bot-api');
-const bot = new TelegramBot(token);
+const bot = new TelegramBot(token, {
+    polling: true, request: {
+        agentOptions: {
+            keepAlive: true,
+            family: 4
+        }
+    }
+});
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
+bot.on("message", async function(msg) {
+    await bot.sendMessage(msg.chat.id, "test");
+});
 
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl);
