@@ -14,7 +14,8 @@ const chatId = process.env.TELE_CHAT_ID;
 const chatId2 = process.env.TELE_CHAT_ID_SH;
 const token = process.env.TELE_BOT_TOKEN;
 const TelegramBot = require('node-telegram-bot-api');
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(token);
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 
 async function connectDatabase() {
