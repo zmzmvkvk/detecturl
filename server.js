@@ -17,7 +17,7 @@ const bot = new TelegramBot(token, { polling: true });
 
 
 async function connectDatabase() {
-    const client = await MongoClient.connect(dburl, { useNewUrlParser: true, useUnifiedTopology: true });
+    const client = await MongoClient.connect(dburl, { useUnifiedTopology: true });
     console.log("DB연결성공");
     const db = client.db(dbName);
     const detections = await db.collection("detect").find({}).toArray();
