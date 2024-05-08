@@ -11,13 +11,14 @@ const PORT = process.env.PORT || 3000;
 const dburl = `mongodb+srv://${dbUser}:${dbPassword}@cluster0.xseitpb.mongodb.net/`;
 const schedule = require('node-schedule');
 const chatId = process.env.TELE_CHAT_ID;
+const chatId2 = process.env.TELE_CHAT_ID_SH;
 const token = process.env.TELE_BOT_TOKEN;
 const TelegramBot = require('node-telegram-bot-api');
 const bot = new TelegramBot(token, { polling: true });
 
 
 async function connectDatabase() {
-    const client = await MongoClient.connect(dburl, { useUnifiedTopology: true });
+    const client = await MongoClient.connect(dburl);
     console.log("DB연결성공");
     const db = client.db(dbName);
     const detections = await db.collection("detect").find({}).toArray();
@@ -73,9 +74,10 @@ async function generate({ url, buttonType, text }, driver) {
             console.log(`STATUS : AVAILABLE`);
             console.log(`url = ${url}`);
             await bot.sendMessage(chatId, `재고 입고된듯${url}`);
+            await bot.sendMessage(chatId2, `재고 입고된듯${url}`);
         }
     } catch (error) {
-        bot.on("polling_error", (msg) => console.log(msg));
+        console.log(error)
     }
 }
 
