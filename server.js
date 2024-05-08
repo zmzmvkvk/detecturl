@@ -15,7 +15,6 @@ const token = process.env.TELE_BOT_TOKEN;
 const TelegramBot = require('node-telegram-bot-api');
 const bot = new TelegramBot(token, { polling: true });
 
-bot.on("polling_error", (msg) => console.log(msg));
 
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -69,12 +68,14 @@ async function generate({ url, buttonType, text }, driver) {
         );
         if (await button.getText() == text) {
             console.log(`STATUS : SOLD OUT`);
+            console.log(`url = ${url}`);
         } else {
             console.log(`STATUS : AVAILABLE`);
-            await bot.sendMessage(chatId, `재고 입고된듯 ${url}`);
+            console.log(`url = ${url}`);
+            await bot.sendMessage(chatId, `재고 입고된듯${url}`);
         }
     } catch (error) {
-        console.log("버튼명 맞지 않음 확인 필요.")
+        bot.on("polling_error", (msg) => console.log(msg));
     }
 }
 
