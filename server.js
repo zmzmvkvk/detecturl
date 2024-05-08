@@ -28,7 +28,16 @@ async function detect(detections) {
         .addArguments(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
             "accept-language=ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
-            "headless", "no-sandbox", "disable-gpu", "lang=ko_KR", "window-size=1920x1080"
+            "headless",
+            "no-sandbox",
+            "disable-gpu",
+            "disable-dev-shm-usage",
+            "disable-software-rasterizer",
+            "window-size=1920x1080",
+            "--user-data-dir=/tmp/chrome_user_data",
+            "--data-path=/tmp/data-path",
+            "--homedir=/tmp",
+            "--disk-cache-dir=/tmp/cache-dir"
         );
 
     let driver = await new Builder().forBrowser('chrome').setChromeOptions(options).build();
