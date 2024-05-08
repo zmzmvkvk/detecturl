@@ -24,10 +24,6 @@ const bot = new TelegramBot(token, {
 });
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-bot.on("message", async function(msg) {
-    await bot.sendMessage(msg.chat.id, "test");
-});
-
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl);
     console.log("DB연결성공");
