@@ -14,7 +14,9 @@ const chatId = process.env.TELE_CHAT_ID;
 const token = process.env.TELE_BOT_TOKEN;
 const TelegramBot = require('node-telegram-bot-api');
 const bot = new TelegramBot(token, { polling: true });
-  
+
+bot.on("polling_error", (msg) => console.log(msg));
+
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl, { useNewUrlParser: true, useUnifiedTopology: true });
     console.log("DB연결성공");
