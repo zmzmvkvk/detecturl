@@ -24,13 +24,6 @@ const bot = new TelegramBot(token, {
     }
 });
 let db, driver;
-bot.onText(/\/add (.+)/, (msg, match) => {
-    const chatId = msg.chat.id;
-    const resp = match[1];
-
-    console.log(resp)
-    bot.sendMessage(chatId, resp);
-});
 
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl);
@@ -87,6 +80,20 @@ async function generate({ url, buttonType, text }) {
 connectDatabase().then(() => {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
+    });
+    bot.onText(/\/add (.+)/, async (msg, match) => {
+        const msgchatId = msg.chat.id;
+        const resp = match[1];
+    
+        console.log(resp);
+        console.log(`chatId = ${msgchatId}`);
+        try {
+            await db.collection("detect").insertOne({ url: resp });
+        } catch (e) {
+            console.log(e);
+        }
+        
+        bot.sendMessage(msgchatId, `${resp}가 db에 저장되었습니다.`);
     });
 }).catch(err => {
     console.error("Database connection failed", err);
