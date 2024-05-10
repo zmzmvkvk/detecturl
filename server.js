@@ -92,8 +92,8 @@ connectDatabase().then(() => {
         } catch (e) {
             console.log(e);
         }
-        
-        bot.sendMessage(msgchatId, `${resp}가 db에 저장되었습니다.`);
+
+        bot.sendMessage(msgchatId, `${resp} 가 db에 저장되었습니다.`);
     });
 }).catch(err => {
     console.error("Database connection failed", err);
