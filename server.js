@@ -14,7 +14,8 @@ const chatId2 = process.env.TELE_CHAT_ID_SH;
 const token = process.env.TELE_BOT_TOKEN;
 const TelegramBot = require('node-telegram-bot-api');
 const bot = new TelegramBot(token, {
-    polling: true, request: {
+    polling: true,
+    request: {
         agentOptions: {
             keepAlive: true,
             family: 4
@@ -23,14 +24,21 @@ const bot = new TelegramBot(token, {
 });
 
 let db;
-let detections = [];
 
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl);
     console.log("DB연결성공");
     db = client.db(dbName);
-    detections = await fetchDetections();
-    watchDatabaseChanges();  // Change Streams 시작
+    watchDatabaseChanges();
+}
+
+async function watchDatabaseChanges() {
+    const changeStream = db.collection('detect').watch();
+    changeStream.on('change', async (change) => {
+        console.log('Detected change:', change);
+        const updatedDetections = await fetchDetections();  // 데이터베이스에서 최신 데이터를 가져옵니다.
+        detect(updatedDetections);  // 최신 데이터로 detect 함수를 호출합니다.
+    });
 }
 
 async function fetchDetections() {
@@ -39,15 +47,7 @@ async function fetchDetections() {
     });
 }
 
-function watchDatabaseChanges() {
-    const changeStream = db.collection('detect').watch();
-    changeStream.on('change', async (change) => {
-        console.log('Detected change:', change);
-        detections = await fetchDetections(); // 데이터 최신화
-    });
-}
-
-async function detect() {
+async function detect(detections) {
     let options = new chrome.Options()
         .addArguments(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
@@ -83,29 +83,27 @@ async function generate({ url, buttonType, text }, driver) {
     console.log("Page : " + await driver.getTitle());
 
     try {
-        const button = await driver.wait(until.elementLocated(By.css(`${buttonType}`)), 2000);
+        const button = await driver.wait(
+            until.elementLocated(By.css(`${buttonType}`)),
+            2000
+        );
         if (await button.getText() == text) {
             console.log(`STATUS : SOLD OUT`);
             console.log(`url = ${url}`);
         } else {
             console.log(`STATUS : AVAILABLE`);
             console.log(`url = ${url}`);
-            await bot.sendMessage(chatId, `재고 입고됨
-            상품명 : ${await driver.getTitle()}
-            url : ${url}`);
-            await bot.sendMessage(chatId2, `재고 입고됨
-            상품명 : ${await driver.getTitle()}
-            url : ${url}`);
+            await bot.sendMessage(chatId, `재고 입고된듯 ${url}`);
+            await bot.sendMessage(chatId2, `재고 입고된듯 ${url}`);
         }
     } catch (error) {
-        console.log("Error processing request:", error);
+        console.log("Error processing detection:", error);
     }
 }
 
 connectDatabase().then(() => {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
-        // 주기적 검사는 Change Streams로 대체됩니다.
     });
 }).catch(err => {
     console.error("Database connection failed", err);
