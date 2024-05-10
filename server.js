@@ -24,6 +24,13 @@ const bot = new TelegramBot(token, {
     }
 });
 let db, driver;
+bot.onText(/\/add (.+)/, (msg, match) => {
+    const chatId = msg.chat.id;
+    const resp = match[1];
+
+    console.log(resp)
+    bot.sendMessage(chatId, resp);
+});
 
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl);
