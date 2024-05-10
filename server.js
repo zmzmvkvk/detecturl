@@ -9,7 +9,6 @@ const dbPassword = encodeURIComponent(process.env.DB_PASSWORD);
 const dbName = "richlab";
 const PORT = process.env.PORT || 3000;
 const dburl = `mongodb+srv://${dbUser}:${dbPassword}@cluster0.xseitpb.mongodb.net/`;
-const schedule = require('node-schedule');
 const chatId = process.env.TELE_CHAT_ID;
 const chatId2 = process.env.TELE_CHAT_ID_SH;
 const token = process.env.TELE_BOT_TOKEN;
@@ -22,17 +21,33 @@ const bot = new TelegramBot(token, {
         }
     }
 });
-// process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+let db;
+let detections = [];
 
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl);
     console.log("DB연결성공");
-    const db = client.db(dbName);
-    const detections = await db.collection("detect").find({}).toArray();
-    return detections.map(doc => ({ url: doc.url, buttonType: doc.buttonType, text: doc.text }));
+    db = client.db(dbName);
+    detections = await fetchDetections();
+    watchDatabaseChanges();  // Change Streams 시작
 }
 
-async function detect(detections) {
+async function fetchDetections() {
+    return db.collection("detect").find({}).toArray().then(results => {
+        return results.map(doc => ({ url: doc.url, buttonType: doc.buttonType, text: doc.text }));
+    });
+}
+
+function watchDatabaseChanges() {
+    const changeStream = db.collection('detect').watch();
+    changeStream.on('change', async (change) => {
+        console.log('Detected change:', change);
+        detections = await fetchDetections(); // 데이터 최신화
+    });
+}
+
+async function detect() {
     let options = new chrome.Options()
         .addArguments(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
@@ -63,41 +78,34 @@ async function detect(detections) {
     }
 }
 
-// 
-
 async function generate({ url, buttonType, text }, driver) {
     await driver.get(url);
     console.log("Page : " + await driver.getTitle());
 
     try {
-        const button = await driver.wait(
-            until.elementLocated(By.css(`${buttonType}`)),
-            2000
-        );
+        const button = await driver.wait(until.elementLocated(By.css(`${buttonType}`)), 2000);
         if (await button.getText() == text) {
             console.log(`STATUS : SOLD OUT`);
             console.log(`url = ${url}`);
         } else {
             console.log(`STATUS : AVAILABLE`);
             console.log(`url = ${url}`);
-            await bot.sendMessage(chatId, `재고 입고된듯${url}`);
-            await bot.sendMessage(chatId2, `재고 입고된듯${url}`);
+            await bot.sendMessage(chatId, `재고 입고됨
+            상품명 : ${await driver.getTitle()}
+            url : ${url}`);
+            await bot.sendMessage(chatId2, `재고 입고됨
+            상품명 : ${await driver.getTitle()}
+            url : ${url}`);
         }
     } catch (error) {
-        console.log(error)
+        console.log("Error processing request:", error);
     }
 }
 
-connectDatabase().then(detections => {
-    app.listen(PORT, async () => {
-        console.log(`Server is running`);
-        schedule.scheduleJob('*/1 * * * *', async function () {
-            try {
-                await detect(detections);
-            } catch (error) {
-                console.error("Error in detection process:", error);
-            }
-        })
+connectDatabase().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+        // 주기적 검사는 Change Streams로 대체됩니다.
     });
 }).catch(err => {
     console.error("Database connection failed", err);
