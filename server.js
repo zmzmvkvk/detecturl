@@ -22,7 +22,7 @@ const bot = new TelegramBot(token, {
         }
     }
 });
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 async function connectDatabase() {
     const client = await MongoClient.connect(dburl);
