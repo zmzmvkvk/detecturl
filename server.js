@@ -14,8 +14,15 @@ const chatId = process.env.TELE_CHAT_ID;
 const chatId2 = process.env.TELE_CHAT_ID_SH;
 const token = process.env.TELE_BOT_TOKEN;
 const TelegramBot = require('node-telegram-bot-api');
-const bot = new TelegramBot(token, { polling: true });
-
+const bot = new TelegramBot(token, {
+    polling: true,
+    request: {
+        agentOptions: {
+            keepAlive: true,
+            family: 4
+        }
+    }
+});
 let db, driver;
 
 async function connectDatabase() {
