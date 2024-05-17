@@ -69,10 +69,8 @@ async function generate({ url, buttonType, text }) {
             console.log(`STATUS : SOLD OUT for ${url}`);
         } else {
             console.log(`STATUS : AVAILABLE for ${url}`);
-            console.log(`buttonText = ${buttonText}`);
-            console.log(`Text = ${text}`);
-            // await bot.sendMessage(chatId, `재고 입고된듯 ${url}`);
-            // await bot.sendMessage(chatId2, `재고 입고된듯 ${url}`);
+            await bot.sendMessage(chatId, `재고 입고된듯 ${url}`);
+            await bot.sendMessage(chatId2, `재고 입고된듯 ${url}`);
         }
     } catch (error) {
         console.log(`Error processing ${url}: ${error}`);
